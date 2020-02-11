@@ -1,18 +1,20 @@
 <script>
+import Board from './Board.svelte';
+
 let currentTurn = 'x';
-let winner = '';
+let currentWinner = '';
+let canRestart = false;
 
 let board = [['', '', ''], ['', '', ''], ['', '', '']];
 
 const restart = () => {
   board = [['', '', ''], ['', '', ''], ['', '', '']];
-  currentTurn = '';
-  winner = '';
+  currentTurn = 'x';
+  currentWinner = '';
+  canRestart = false;
 };
 
 const winnerExists = board => {
-  console.log('winnerExists', board);
-
   const ttt1 = [board[0][0], board[0][1], board[0][2]];
   const ttt2 = [board[1][0], board[1][1], board[1][2]];
   const ttt3 = [board[2][0], board[2][1], board[2][2]];
@@ -28,45 +30,60 @@ const winnerExists = board => {
 };
 
 const addPiece = (sq, x, y) => {
-  console.log('addPiece', sq, x, y);
-
   board[y][x] = currentTurn;
 
-  const we = winnerExists(board);
-  // console.log('we', we);
-
-  if (we) {
-    console.log('yes winner', currentTurn);
-    winner = currentTurn;
+  if (winnerExists(board)) {
+    currentWinner = currentTurn;
+    canRestart;
+    setTimeout(() => {
+      canRestart = true;
+    }, 0);
   } else {
-    console.log('no winner');
     currentTurn = currentTurn === 'x' ? 'o' : 'x';
+    canRestart = false;
   }
 };
 </script>
 
-<main>
-	{#each board as row, y}
-
-{#each row as sq, x}
-	<span on:click={() => {!sq.length && addPiece(sq,x,y)}}>{sq}</span>
-	{/each}
-<br/>
-	{/each}
-<br/>
-<h6>{currentTurn}</h6>
-	 {#if winner.length > 0}
-	 <h1>Winner: {currentTurn}</h1>
-	 <a on:click={restart}>restart</a>
-	 {/if}
-</main>
-
 <style>
-	 span {
-		 display: inline-block;
-		 width: 20px;
-		 height: 20px;
-		 border: 1px solid #eee;
-		 cursor: pointer;
-	 }
+:global(body) {
+  padding: 0;
+  color: white;
+  background: black;
+  text-align: center;
+}
+.container {
+  height: 100vh;
+}
+.container.current-x {
+  background: black;
+}
+.container.current-o {
+  background: repeating-linear-gradient(-45deg, #000, #000 12px, #fff 0, #fff 20px);
+}
+.inner {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  box-sizing: border-box;
+}
+.click-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+.click-overlay.active {
+  pointer-events: auto;
+}
 </style>
+
+<div class:active={canRestart} class="click-overlay" on:click={() => canRestart && restart()}></div>
+<div class="container current-{currentTurn}">
+	<div class="inner">
+		<Board board={board} addPiece={addPiece} />
+	</div>
+</div>
